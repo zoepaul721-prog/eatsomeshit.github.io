@@ -23,7 +23,7 @@ body{
 .active{
     display:block;
 }
-/* 顶部导航栏（完美还原微信原生双返回/关闭按钮布局） */
+/* 顶部导航栏 */
 .header {
     height: 50px;
     background: #fff;
@@ -210,7 +210,7 @@ body{
     line-height:1.4;
 }
 .label{
-    width:105px;
+    width:75px; /* 缩小编距，让左侧标签与右侧输入内容靠得更近 */
     color:#333;
 }
 .content{
@@ -223,7 +223,7 @@ body{
     margin-left:auto;
     cursor:pointer;
 }
-/* 右下角状态标签（严格对照图片进行像素级微调与完美文字居中） */
+/* 右下角状态标签 */
 .status-tag{
     position:absolute;
     right:-26px;
@@ -241,7 +241,6 @@ body{
     cursor:pointer;
     text-align:center;
 }
-/* 调至与原图完全一致的高级质感淡紫色与淡橘色 */
 .tag-pending{
     background:#ff9c6e;
 }
@@ -368,8 +367,7 @@ body{
             <div class="header-icon" onclick="backForm()">&lt;</div>
             <div class="header-icon" onclick="backForm()" style="font-size:24px; margin-left:2px; font-weight:300;">×</div>
         </div>
-        <div class="header-title">日常请假列表</div>
-        <div class="header-right" style="font-weight:bold;">•••</div>
+        <div class="header-title"></div> <div class="header-right" style="font-weight:bold;">•••</div>
     </div>
     <div id="historyList"></div>
     <button class="bottom-btn">提交续假</button>
@@ -422,8 +420,7 @@ body{
     </div>
     <div class="detail-item">
         <div class="detail-label">监护人姓名</div>
-        <div class="detail-value">范冰冰</div>
-    </div>
+        <div class="detail-value">董成鹏</div> </div>
     <div class="detail-item">
         <div class="detail-label">监护人电话</div>
         <div class="detail-value">18898756421</div>
