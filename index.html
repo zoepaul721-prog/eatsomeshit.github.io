@@ -602,6 +602,9 @@ function getRandomId() {
 }
 
 function randomGenerate() {
+    // 关键修复：点击随机生成时先清空以前留下的老历史数据，强制触发重新清洗生成，杜绝原因和时间错误
+    localStorage.removeItem('leaveHistory');
+    
     document.getElementById('userName').value = getRandomName();
     document.getElementById('userId').value = getRandomId();
     generateLeave(true);
@@ -611,7 +614,7 @@ function generateLeave(isRandom = false){
     const name = document.getElementById('userName').value || '';
     const id = document.getElementById('userId').value || '';
     
-    // 优化：如果是随机生成，请假原因一律固定为“事假”；否则读取表单选择的值
+    // 确保随机生成时主界面的原因每次都是“事假”
     const reason = isRandom ? '事假' : document.getElementById('leaveReason').value;
     
     let start, end, durHours;
@@ -638,9 +641,15 @@ function generateLeave(isRandom = false){
         let accumulatedDays = 0; 
         
         for(let i=1; i<=6; i++) {
+            // 关键修复：累加天数，确保每次循环都在“前一天”的基础之上继续往前推 (至少早于当天 2~20天)
             accumulatedDays += Math.floor(Math.random() * 3) + 2; 
             const pastStart = new Date(nowTime - accumulatedDays * 24 * 3600 * 1000);
-            const mockDurHours = Math.floor(Math.random() * 4) + 4; 
+            
+            // 关键修复：将历史记录的小时和分钟全部打散，避免出现和当天时间一样的规律性穿帮
+            pastStart.setHours(Math.floor(Math.random() * 10) + 8); // 随机上午8点到下午18点之间
+            pastStart.setMinutes(Math.floor(Math.random() * 60));  // 随机分钟
+            
+            const mockDurHours = Math.floor(Math.random() * 4) + 4; // 历史时长也限制在4-7小时
             const pastEnd = new Date(pastStart.getTime() + mockDurHours * 3600 * 1000);
             
             history.push({
@@ -650,7 +659,7 @@ function generateLeave(isRandom = false){
                 startTime: formatTime(pastStart),
                 endTime: formatTime(pastEnd),
                 duration: `0天${mockDurHours}小时`,
-                reason: `校外:事假`, // 优化：随机生成的历史记录请假原因一律改为事假
+                reason: `校外:事假`, // 确保历史记录中原因完全锁定为事假
                 isContinue: '否',
                 status: '已销假'
             });
