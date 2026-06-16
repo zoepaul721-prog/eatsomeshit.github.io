@@ -240,18 +240,19 @@ body {
     cursor: pointer;
 }
 
-/* 列表下方的请假条按钮 */
+/* 高度还原的请假条按钮样式 */
 .leave-slip-btn {
-    width: 200px;
-    height: 42px;
-    background: #79cac4; /* 与图片相近的薄荷绿色 */
+    width: 210px;
+    height: 44px;
+    background: #61cac3;
     color: #fff;
-    border-radius: 8px;
+    border-radius: 6px;
     display: flex;
     justify-content: center;
     align-items: center;
     margin: 20px auto 5px;
     font-size: 16px;
+    font-weight: 400;
     cursor: pointer;
 }
 
@@ -269,7 +270,7 @@ body {
     align-items: center;
     font-size: 11px;
     font-weight: 500;
-    z-index: 1;
+    z-index: 10;
     cursor: pointer;
     text-align: center;
 }
@@ -390,7 +391,7 @@ body {
                 <div class="toggle-switch" id="toggleBtn" onclick="toggleSwitch()"></div>
             </div>
         </div>
-        <button class="btn-generate" onclick="generateLeave()">生成请假条</button>
+        <button class="btn-generate" onclick="generateLeave(false)">生成请假条</button>
         <button class="btn-history" onclick="showHistory()">查看历史记录 (0)</button>
         <button class="btn-random" onclick="randomGenerate()">随机生成</button>
     </div>
@@ -583,12 +584,10 @@ function formatTime(date){
     return `${y}-${m}-${d} ${h}:${min}`;
 }
 
-// 随机生成姓名函数
 function getRandomName() {
     const surnames = "赵钱孙李周吴郑王冯陈褚卫蒋沈韩杨朱秦尤许何吕施张孔曹严华金魏陶姜";
     const givenNames = "伟刚勇毅俊峰强军平保东文辉力明永健世广志义兴良海山仁波宁贵福生龙元全国胜学祥才发武新利清飞彬富顺信子杰涛昌成康星光天达安岩中茂进林有坚和彪博诚先敬震振壮会思群豪心邦承乐绍功松善厚庆磊民友裕河哲江超浩亮政谦亨奇固之轮翰朗伯宏言若鸣朋斌梁栋维启克伦翔旭鹏泽晨辰帆诚雷雁秋皆";
     const surname = surnames[Math.floor(Math.random() * surnames.length)];
-    // 随机决定名字是1个字还是2个字
     const nameLength = Math.random() > 0.5 ? 1 : 2;
     let givenName = "";
     for (let i = 0; i < nameLength; i++) {
@@ -597,27 +596,38 @@ function getRandomName() {
     return surname + givenName;
 }
 
-// 随机生成学号函数
 function getRandomId() {
-    // 随机生成 00 到 99 的两位数字
     const xx = String(Math.floor(Math.random() * 100)).padStart(2, '0');
     return "20241020" + xx;
 }
 
-// 随机生成按钮点击事件
 function randomGenerate() {
     document.getElementById('userName').value = getRandomName();
     document.getElementById('userId').value = getRandomId();
-    // 自动调用生成请假条并跳转逻辑
-    generateLeave();
+    generateLeave(true);
 }
 
-function generateLeave(){
+function generateLeave(isRandom = false){
     const name = document.getElementById('userName').value || '';
     const id = document.getElementById('userId').value || '';
-    const reason = document.getElementById('leaveReason').value;
-    const now = new Date();
-    const end = new Date(now.getTime()+leaveTime*3600000);
+    
+    // 优化：如果是随机生成，请假原因一律固定为“事假”；否则读取表单选择的值
+    const reason = isRandom ? '事假' : document.getElementById('leaveReason').value;
+    
+    let start, end, durHours;
+    const nowTime = Date.now();
+
+    if (isRandom) {
+        start = new Date(nowTime - 3600000); 
+        durHours = Math.floor(Math.random() * 4) + 4; 
+        leaveTime = durHours;
+        document.getElementById('timeDisplay').innerText = leaveTime + ' 小时';
+    } else {
+        start = new Date(nowTime);
+        durHours = leaveTime;
+    }
+
+    end = new Date(start.getTime() + durHours * 3600000);
     
     localStorage.setItem('savedUserName', name);
     localStorage.setItem('savedUserId', id);
@@ -625,20 +635,22 @@ function generateLeave(){
     let history = JSON.parse(localStorage.getItem('leaveHistory')||'[]');
     
     if(history.length === 0 && name && id) {
-        const mockReasons = ['病假', '事假', '周末外出', '节假日外出'];
-        const nowTime = now.getTime();
+        let accumulatedDays = 0; 
+        
         for(let i=1; i<=6; i++) {
-            const daysAgo = i * 45 + Math.floor(Math.random() * 15);
-            const pastStart = new Date(nowTime - daysAgo * 24 * 3600 * 1000);
-            const pastEnd = new Date(pastStart.getTime() + 8 * 3600 * 1000);
+            accumulatedDays += Math.floor(Math.random() * 3) + 2; 
+            const pastStart = new Date(nowTime - accumulatedDays * 24 * 3600 * 1000);
+            const mockDurHours = Math.floor(Math.random() * 4) + 4; 
+            const pastEnd = new Date(pastStart.getTime() + mockDurHours * 3600 * 1000);
+            
             history.push({
                 id: Date.now() - i * 100000,
                 name: name,
                 userId: id,
                 startTime: formatTime(pastStart),
                 endTime: formatTime(pastEnd),
-                duration: '0天8小时',
-                reason: `校外:${mockReasons[i % 4]}`,
+                duration: `0天${mockDurHours}小时`,
+                reason: `校外:事假`, // 优化：随机生成的历史记录请假原因一律改为事假
                 isContinue: '否',
                 status: '已销假'
             });
@@ -653,16 +665,18 @@ function generateLeave(){
         });
     }
     
+    const recordStatus = isRandom ? '已销假' : '待销假';
+
     const data={
-        id:Date.now(),
-        name:name,
-        userId:id,
-        startTime:formatTime(now),
-        endTime:formatTime(end),
-        duration:`0天${leaveTime}小时`,
-        reason:`校外:${reason}`,
-        isContinue:isContinue?'是':'否',
-        status:'待销假'
+        id: Date.now(),
+        name: name,
+        userId: id,
+        startTime: formatTime(start),
+        endTime: formatTime(end),
+        duration: `0天${durHours}小时`,
+        reason: `校外:${reason}`,
+        isContinue: isContinue ? '是' : '否',
+        status: recordStatus
     };
     
     history.unshift(data);
@@ -696,11 +710,15 @@ function backHistory(){
 function renderHistory(){
     const history = JSON.parse(localStorage.getItem('leaveHistory')||'[]');
     const list = document.getElementById('historyList');
-    list.innerHTML='';
     
-    history.forEach(item=>{
-        const statusClass = item.status==='待销假'?'tag-pending':'tag-finished';
-        const html=`
+    const htmls = history.map((item, index) => {
+        const statusClass = item.status === '待销假' ? 'tag-pending' : 'tag-finished';
+        
+        const leaveSlipHtml = index === 0 
+            ? `<div class="leave-slip-btn" onclick="openDetail(${item.id})">请假条</div>` 
+            : '';
+            
+        return `
         <div class="leave-item">
             <div class="status-tag ${statusClass}" onclick="toggleStatus(${item.id})">
                 ${item.status}
@@ -734,11 +752,13 @@ function renderHistory(){
                 <div class="label">销假状态</div>
                 <div class="content">${item.status}</div>
             </div>
-            <div class="leave-slip-btn" onclick="openDetail(${item.id})">请假条</div>
+            
+            ${leaveSlipHtml}
         </div>
         `;
-        list.innerHTML += html;
     });
+    
+    list.innerHTML = htmls.join('');
     list.style.paddingBottom = '120px';
 }
 
