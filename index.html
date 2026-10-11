@@ -208,17 +208,22 @@ body {
     margin-top: 14px;
     cursor: pointer;
 }
-
 /* 历史页列表条目 */
 #historyList {
     padding-top: 15px; 
+}
+/* 左滑删除容器 */
+.leave-item-wrapper {
+    position: relative;
+    overflow: hidden;
+    border-bottom: 8px solid #f5f6f8;
 }
 .leave-item {
     background: #fff;
     padding: 20px 22px;
     position: relative;
     overflow: hidden;
-    border-bottom: 8px solid #f5f6f8;
+    transition: transform 0.3s ease;
 }
 .item-row {
     display: flex;
@@ -239,12 +244,35 @@ body {
     margin-left: auto;
     cursor: pointer;
 }
-
+/* 删除按钮 */
+.delete-btn {
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: 80px;
+    height: 100%;
+    background: #ff3b30;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    transform: translateX(100%);
+    transition: transform 0.3s ease;
+    cursor: pointer;
+    z-index: 5;
+}
+.leave-item-wrapper.active-delete .leave-item {
+    transform: translateX(-80px);
+}
+.leave-item-wrapper.active-delete .delete-btn {
+    transform: translateX(0);
+}
 /* 高度还原的请假条按钮样式 */
 .leave-slip-btn {
     width: 210px;
     height: 44px;
-    background: #61cac3;
+    background: linear-gradient(90deg, #52d8c8, #49b6ff);
     color: #fff;
     border-radius: 6px;
     display: flex;
@@ -255,20 +283,19 @@ body {
     font-weight: 400;
     cursor: pointer;
 }
-
 /* 右下角状态标签 */
 .status-tag {
     position: absolute;
-    right: -26px;
-    bottom: 14px;
-    width: 96px;
-    height: 22px;
+    right: -30px;
+    bottom: 16px;
+    width: 110px;
+    height: 28px;
     transform: rotate(-45deg);
     color: #fff;
     display: flex;
     justify-content: center;
     align-items: center;
-    font-size: 11px;
+    font-size: 14px;
     font-weight: 500;
     z-index: 10;
     cursor: pointer;
@@ -280,7 +307,6 @@ body {
 .tag-finished {
     background: #b286fd;
 }
-
 /* 底部按钮 */
 .bottom-btn {
     position: fixed;
@@ -295,7 +321,6 @@ body {
     z-index: 999;
     cursor: pointer;
 }
-
 /* 详情页 */
 .detail-page {
     background: #f5f6f8;
@@ -340,17 +365,19 @@ body {
     gap: 50px;
     color: #777;
 }
+/* 必填星号红色 */
+.required-star {
+    color: #ff0000;
+}
 </style>
 </head>
 <body>
-
 <div class="password-layer" id="passwordLayer">
     <h2 style="font-weight:500; color:#333;">请输入访问口令</h2>
     <input type="password" class="password-input" id="passwordInput" placeholder="请输入口令">
     <button class="password-btn" onclick="checkPassword()">进入系统</button>
     <div class="password-tip" id="passwordTip">口令错误</div>
 </div>
-
 <div id="page1" class="page active">
     <div class="header">
         <div class="header-left">
@@ -386,6 +413,14 @@ body {
                     <button class="time-btn" onclick="changeTime(1)">+</button>
                 </div>
             </div>
+            <div class="form-item">
+                <label>自定义起始时间</label>
+                <input type="datetime-local" id="startTimeInput">
+            </div>
+            <div class="form-item">
+                <label>自定义结束时间</label>
+                <input type="datetime-local" id="endTimeInput">
+            </div>
             <div class="form-item toggle-row">
                 <label>是否续假</label>
                 <div class="toggle-switch" id="toggleBtn" onclick="toggleSwitch()"></div>
@@ -396,12 +431,10 @@ body {
         <button class="btn-random" onclick="randomGenerate()">随机生成</button>
     </div>
 </div>
-
 <div id="page3" class="page">
     <div id="historyList"></div>
     <button class="bottom-btn">提交续假</button>
 </div>
-
 <div id="page4" class="page detail-page">
     <div class="header">
         <div class="header-left">
@@ -413,11 +446,11 @@ body {
     
     <div class="section-title">请假信息</div>
     <div class="detail-item">
-        <div class="detail-label">*学期</div>
-        <div class="detail-value">2025–2026学年第二学期</div>
+        <div class="detail-label"><span class="required-star">*</span>学期</div>
+        <div class="detail-value">2026-2027学年第一学期</div>
     </div>
     <div class="detail-item">
-        <div class="detail-label">*请假时间</div>
+        <div class="detail-label"><span class="required-star">*</span>请假时间</div>
         <div class="detail-value" id="detailTime"></div>
     </div>
     <div class="detail-item">
@@ -425,11 +458,11 @@ body {
         <div class="detail-value" id="detailDuration"></div>
     </div>
     <div class="detail-item">
-        <div class="detail-label">*请假类型</div>
+        <div class="detail-label"><span class="required-star">*</span>请假类型</div>
         <div class="detail-value">校外</div>
     </div>
     <div class="detail-item">
-        <div class="detail-label">*请假原因</div>
+        <div class="detail-label"><span class="required-star">*</span>请假原因</div>
         <div class="detail-value" id="detailReason"></div>
     </div>
     <div class="detail-item">
@@ -441,7 +474,7 @@ body {
         <div class="detail-value">18975684512</div>
     </div>
     <div class="detail-item">
-        <div class="detail-label">*是否已告知监护人</div>
+        <div class="detail-label"><span class="required-star">*</span>是否已告知监护人</div>
         <div class="radio-group">
             <div>◉ 是</div>
             <div>○ 否</div>
@@ -449,7 +482,7 @@ body {
     </div>
     <div class="detail-item">
         <div class="detail-label">监护人姓名</div>
-        <div class="detail-value">董成鹏</div> 
+        <div class="detail-value">谭成义</div> 
     </div>
     <div class="detail-item">
         <div class="detail-label">监护人电话</div>
@@ -458,14 +491,14 @@ body {
     
     <div class="section-title">外出信息</div>
     <div class="detail-item">
-        <div class="detail-label">*是否离校</div>
+        <div class="detail-label"><span class="required-star">*</span>是否离校</div>
         <div class="radio-group">
             <div>◉ 是</div>
             <div>○ 否</div>
         </div>
     </div>
     <div class="detail-item">
-        <div class="detail-label">*是否离开廊坊</div>
+        <div class="detail-label"><span class="required-star">*</span>是否离开廊坊</div>
         <div class="radio-group">
             <div>○ 是</div>
             <div>◉ 否</div>
@@ -499,7 +532,6 @@ body {
         </div>
     </div>
 </div>
-
 <script>
 window.onload = function() {
     document.getElementById('userName').value = localStorage.getItem('savedUserName') || '';
@@ -507,11 +539,9 @@ window.onload = function() {
     updateHistoryCount();
     bindSwipeEvents();
 };
-
 function bindSwipeEvents() {
     let startX = 0;
     let startY = 0;
-
     const page3 = document.getElementById('page3');
     page3.addEventListener('touchstart', e => {
         startX = e.touches[0].clientX;
@@ -520,11 +550,18 @@ function bindSwipeEvents() {
     page3.addEventListener('touchend', e => {
         const deltaX = e.changedTouches[0].clientX - startX;
         const deltaY = e.changedTouches[0].clientY - startY;
+        
+        // 右滑先关闭已展开的删除按钮
+        const activeDelete = document.querySelector('.leave-item-wrapper.active-delete');
+        if (activeDelete && deltaX > 50) {
+            activeDelete.classList.remove('active-delete');
+            return;
+        }
+        
         if (deltaX > 60 && Math.abs(deltaX) > Math.abs(deltaY) * 1.5) {
             backForm();
         }
     });
-
     const page4 = document.getElementById('page4');
     page4.addEventListener('touchstart', e => {
         startX = e.touches[0].clientX;
@@ -538,12 +575,10 @@ function bindSwipeEvents() {
         }
     });
 }
-
 function showPage(id){
     document.querySelectorAll('.page').forEach(page=>page.classList.remove('active'));
     document.getElementById(id).classList.add('active');
 }
-
 function checkPassword(){
     const input = document.getElementById('passwordInput').value;
     if(input === '9169'){
@@ -553,7 +588,6 @@ function checkPassword(){
         document.getElementById('passwordTip').style.display='block';
     }
 }
-
 let leaveTime = 8;
 function changeTime(num){
     leaveTime += num;
@@ -561,7 +595,6 @@ function changeTime(num){
     if(leaveTime > 24) leaveTime = 24;
     document.getElementById('timeDisplay').innerText = leaveTime + ' 小时';
 }
-
 let isContinue = false;
 function toggleSwitch(){
     isContinue = !isContinue;
@@ -574,7 +607,6 @@ function toggleSwitch(){
         btn.style.boxShadow='none';
     }
 }
-
 function formatTime(date){
     const y=date.getFullYear();
     const m=String(date.getMonth()+1).padStart(2,'0');
@@ -583,7 +615,6 @@ function formatTime(date){
     const min=String(date.getMinutes()).padStart(2,'0');
     return `${y}-${m}-${d} ${h}:${min}`;
 }
-
 function getRandomName() {
     const surnames = "赵钱孙李周吴郑王冯陈褚卫蒋沈韩杨朱秦尤许何吕施张孔曹严华金魏陶姜";
     const givenNames = "伟刚勇毅俊峰强军平保东文辉力明永健世广志义兴良海山仁波宁贵福生龙元全国胜学祥才发武新利清飞彬富顺信子杰涛昌成康星光天达安岩中茂进林有坚和彪博诚先敬震振壮会思群豪心邦承乐绍功松善厚庆磊民友裕河哲江超浩亮政谦亨奇固之轮翰朗伯宏言若鸣朋斌梁栋维启克伦翔旭鹏泽晨辰帆诚雷雁秋皆";
@@ -595,21 +626,21 @@ function getRandomName() {
     }
     return surname + givenName;
 }
-
 function getRandomId() {
     const xx = String(Math.floor(Math.random() * 100)).padStart(2, '0');
     return "20241020" + xx;
 }
-
 function randomGenerate() {
-    // 关键修复：点击随机生成时先清空以前留下的老历史数据，强制触发重新清洗生成，杜绝原因和时间错误
+    // 点击随机生成时先清空以前留下的老历史数据
     localStorage.removeItem('leaveHistory');
     
     document.getElementById('userName').value = getRandomName();
     document.getElementById('userId').value = getRandomId();
+    // 随机生成清空自定义时间
+    document.getElementById('startTimeInput').value = '';
+    document.getElementById('endTimeInput').value = '';
     generateLeave(true);
 }
-
 function generateLeave(isRandom = false){
     const name = document.getElementById('userName').value || '';
     const id = document.getElementById('userId').value || '';
@@ -619,18 +650,32 @@ function generateLeave(isRandom = false){
     
     let start, end, durHours;
     const nowTime = Date.now();
-
+    
+    // 获取自定义时间输入
+    const customStart = document.getElementById('startTimeInput').value;
+    const customEnd = document.getElementById('endTimeInput').value;
+    
     if (isRandom) {
         start = new Date(nowTime - 3600000); 
         durHours = Math.floor(Math.random() * 4) + 4; 
+        leaveTime = durHours;
+        document.getElementById('timeDisplay').innerText = leaveTime + ' 小时';
+    } else if (customStart && customEnd) {
+        // 使用用户自定义的起止时间
+        start = new Date(customStart);
+        end = new Date(customEnd);
+        durHours = Math.round((end - start) / 3600000);
+        if (durHours < 1) durHours = 1;
         leaveTime = durHours;
         document.getElementById('timeDisplay').innerText = leaveTime + ' 小时';
     } else {
         start = new Date(nowTime);
         durHours = leaveTime;
     }
-
-    end = new Date(start.getTime() + durHours * 3600000);
+    
+    if (!end) {
+        end = new Date(start.getTime() + durHours * 3600000);
+    }
     
     localStorage.setItem('savedUserName', name);
     localStorage.setItem('savedUserId', id);
@@ -641,15 +686,15 @@ function generateLeave(isRandom = false){
         let accumulatedDays = 0; 
         
         for(let i=1; i<=6; i++) {
-            // 关键修复：累加天数，确保每次循环都在“前一天”的基础之上继续往前推 (至少早于当天 2~20天)
+            // 累加天数，确保每次循环都在“前一天”的基础之上继续往前推
             accumulatedDays += Math.floor(Math.random() * 3) + 2; 
             const pastStart = new Date(nowTime - accumulatedDays * 24 * 3600 * 1000);
             
-            // 关键修复：将历史记录的小时和分钟全部打散，避免出现和当天时间一样的规律性穿帮
-            pastStart.setHours(Math.floor(Math.random() * 10) + 8); // 随机上午8点到下午18点之间
-            pastStart.setMinutes(Math.floor(Math.random() * 60));  // 随机分钟
+            // 将历史记录的小时和分钟全部打散
+            pastStart.setHours(Math.floor(Math.random() * 10) + 8);
+            pastStart.setMinutes(Math.floor(Math.random() * 60));
             
-            const mockDurHours = Math.floor(Math.random() * 4) + 4; // 历史时长也限制在4-7小时
+            const mockDurHours = Math.floor(Math.random() * 4) + 4;
             const pastEnd = new Date(pastStart.getTime() + mockDurHours * 3600 * 1000);
             
             history.push({
@@ -659,13 +704,12 @@ function generateLeave(isRandom = false){
                 startTime: formatTime(pastStart),
                 endTime: formatTime(pastEnd),
                 duration: `0天${mockDurHours}小时`,
-                reason: `校外:事假`, // 确保历史记录中原因完全锁定为事假
+                reason: `校外:事假`,
                 isContinue: '否',
                 status: '已销假'
             });
         }
     }
-
     if(name && id) {
         history = history.map(item=>{
             item.name = name;
@@ -675,7 +719,6 @@ function generateLeave(isRandom = false){
     }
     
     const recordStatus = isRandom ? '已销假' : '待销假';
-
     const data={
         id: Date.now(),
         name: name,
@@ -694,7 +737,6 @@ function generateLeave(isRandom = false){
     showHistory();
     updateHistoryCount();
 }
-
 function updateHistoryCount(){
     const history = JSON.parse(localStorage.getItem('leaveHistory')||'[]');
     const btn = document.querySelector('.btn-history');
@@ -702,75 +744,125 @@ function updateHistoryCount(){
         btn.innerText=`查看历史记录 (${history.length})`;
     }
 }
-
 function showHistory(){
     showPage('page3');
     renderHistory();
 }
-
 function backForm(){
     showPage('page1');
 }
-
 function backHistory(){
     showPage('page3');
 }
-
 function renderHistory(){
     const history = JSON.parse(localStorage.getItem('leaveHistory')||'[]');
     const list = document.getElementById('historyList');
     
     const htmls = history.map((item, index) => {
         const statusClass = item.status === '待销假' ? 'tag-pending' : 'tag-finished';
+        // 斜角标签两种状态都显示文字
+        const statusText = item.status;
+        // 列表内行的销假状态：仅已销假显示文字，待销假空白
+        const rowStatusText = item.status === '已销假' ? item.status : '';
         
         const leaveSlipHtml = index === 0 
             ? `<div class="leave-slip-btn" onclick="openDetail(${item.id})">请假条</div>` 
             : '';
             
         return `
-        <div class="leave-item">
-            <div class="status-tag ${statusClass}" onclick="toggleStatus(${item.id})">
-                ${item.status}
+        <div class="leave-item-wrapper" data-id="${item.id}">
+            <div class="leave-item">
+                <div class="status-tag ${statusClass}" onclick="toggleStatus(${item.id})">
+                    ${statusText}
+                </div>
+                <div class="item-row">
+                    <div class="label">学号</div>
+                    <div class="content">${item.userId}</div>
+                    <div class="detail-link" onclick="openDetail(${item.id})">查看详情＞</div>
+                </div>
+                <div class="item-row">
+                    <div class="label">姓名</div>
+                    <div class="content">${item.name}</div>
+                </div>
+                <div class="item-row">
+                    <div class="label">请假时间</div>
+                    <div class="content">${item.startTime}至${item.endTime}</div>
+                </div>
+                <div class="item-row">
+                    <div class="label">请假时长</div>
+                    <div class="content">${item.duration}</div>
+                </div>
+                <div class="item-row">
+                    <div class="label">是否续假</div>
+                    <div class="content">${item.isContinue}</div>
+                </div>
+                <div class="item-row">
+                    <div class="label">请假原因</div>
+                    <div class="content">${item.reason}</div>
+                </div>
+                <div class="item-row">
+                    <div class="label">销假状态</div>
+                    <div class="content">${rowStatusText}</div>
+                </div>
+                
+                ${leaveSlipHtml}
             </div>
-            <div class="item-row">
-                <div class="label">学号</div>
-                <div class="content">${item.userId}</div>
-                <div class="detail-link" onclick="openDetail(${item.id})">查看详情＞</div>
-            </div>
-            <div class="item-row">
-                <div class="label">姓名</div>
-                <div class="content">${item.name}</div>
-            </div>
-            <div class="item-row">
-                <div class="label">请假时间</div>
-                <div class="content">${item.startTime}至${item.endTime}</div>
-            </div>
-            <div class="item-row">
-                <div class="label">请假时长</div>
-                <div class="content">${item.duration}</div>
-            </div>
-            <div class="item-row">
-                <div class="label">是否续假</div>
-                <div class="content">${item.isContinue}</div>
-            </div>
-            <div class="item-row">
-                <div class="label">请假原因</div>
-                <div class="content">${item.reason}</div>
-            </div>
-            <div class="item-row">
-                <div class="label">销假状态</div>
-                <div class="content">${item.status}</div>
-            </div>
-            
-            ${leaveSlipHtml}
+            <div class="delete-btn" onclick="deleteRecord(${item.id})">删除</div>
         </div>
         `;
     });
     
     list.innerHTML = htmls.join('');
     list.style.paddingBottom = '120px';
+    
+    // 绑定左滑删除事件
+    bindSwipeDelete();
 }
-
+// 左滑删除事件绑定
+function bindSwipeDelete() {
+    const wrappers = document.querySelectorAll('.leave-item-wrapper');
+    let startX = 0;
+    let currentWrapper = null;
+    
+    wrappers.forEach(wrapper => {
+        wrapper.addEventListener('touchstart', e => {
+            // 关闭其他已展开的删除按钮
+            document.querySelectorAll('.leave-item-wrapper.active-delete').forEach(w => {
+                if (w !== wrapper) w.classList.remove('active-delete');
+            });
+            startX = e.touches[0].clientX;
+            currentWrapper = wrapper;
+        }, {passive: true});
+        
+        wrapper.addEventListener('touchend', e => {
+            const deltaX = e.changedTouches[0].clientX - startX;
+            if (deltaX < -50) {
+                // 左滑显示删除
+                currentWrapper.classList.add('active-delete');
+            } else if (deltaX > 50) {
+                // 右滑隐藏删除
+                currentWrapper.classList.remove('active-delete');
+            }
+        });
+    });
+    
+    // 点击空白处关闭删除
+    document.addEventListener('touchstart', e => {
+        if (!e.target.closest('.leave-item-wrapper')) {
+            document.querySelectorAll('.leave-item-wrapper.active-delete').forEach(w => {
+                w.classList.remove('active-delete');
+            });
+        }
+    });
+}
+// 删除单条记录
+function deleteRecord(id) {
+    let history = JSON.parse(localStorage.getItem('leaveHistory')||'[]');
+    history = history.filter(item => item.id !== id);
+    localStorage.setItem('leaveHistory', JSON.stringify(history));
+    renderHistory();
+    updateHistoryCount();
+}
 function toggleStatus(id){
     let history = JSON.parse(localStorage.getItem('leaveHistory')||'[]');
     history = history.map(item=>{
@@ -782,7 +874,6 @@ function toggleStatus(id){
     localStorage.setItem('leaveHistory',JSON.stringify(history));
     renderHistory();
 }
-
 function openDetail(id){
     const history = JSON.parse(localStorage.getItem('leaveHistory')||'[]');
     const item = history.find(v=>v.id===id);
