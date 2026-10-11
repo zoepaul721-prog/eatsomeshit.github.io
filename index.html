@@ -286,16 +286,16 @@ body {
 /* 右下角状态标签 */
 .status-tag {
     position: absolute;
-    right: -30px;
-    bottom: 16px;
-    width: 110px;
-    height: 28px;
+    right: -38px;
+    bottom: 22px;
+    width: 140px;
+    height: 38px;
     transform: rotate(-45deg);
     color: #fff;
     display: flex;
     justify-content: center;
     align-items: center;
-    font-size: 14px;
+    font-size: 20px;
     font-weight: 500;
     z-index: 10;
     cursor: pointer;
@@ -307,7 +307,7 @@ body {
 .tag-finished {
     background: #b286fd;
 }
-/* 底部按钮 */
+/* 底部固定按钮（提交续假用） */
 .bottom-btn {
     position: fixed;
     bottom: 0;
@@ -319,6 +319,18 @@ body {
     color: #fff;
     font-size: 18px;
     z-index: 999;
+    cursor: pointer;
+}
+/* 详情页销假按钮（带边距圆角） */
+.btn-cancel-leave {
+    width: calc(100% - 32px);
+    margin: 20px 16px 30px;
+    height: 50px;
+    border: none;
+    border-radius: 12px;
+    background: linear-gradient(90deg, #52d8c8, #49b6ff);
+    color: #fff;
+    font-size: 17px;
     cursor: pointer;
 }
 /* 详情页 */
@@ -369,6 +381,18 @@ body {
 .required-star {
     color: #ff0000;
 }
+/* 上传图片框 */
+.upload-img-box {
+    width: 120px;
+    height: 120px;
+    border: 1px solid #e0e0e0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 8px 0;
+    color: #ccc;
+    font-size: 36px;
+}
 </style>
 </head>
 <body>
@@ -383,7 +407,7 @@ body {
         <div class="header-left">
             <div class="header-icon">&lt;</div>
         </div>
-        <div class="header-title">日常请假系统</div>
+        <div class="header-title">日常请假详情</div>
         <div class="header-right" style="font-size:24px; line-height:1;">×</div>
     </div>
     <div class="form-page">
@@ -505,34 +529,69 @@ body {
         </div>
     </div>
     <div class="detail-item">
-        <div class="detail-label">外出地点</div>
-        <div class="detail-value">廊坊市人民医院</div>
+        <div class="detail-label"><span class="required-star">*</span>外出地点</div>
+        <div class="detail-value">河北省廊坊市安次区</div>
     </div>
     <div class="detail-item">
         <div class="detail-label">外出详细地点</div>
         <input class="detail-input" placeholder="请输入">
     </div>
     <div class="detail-item">
-        <div class="detail-label">外出时间</div>
+        <div class="detail-label"><span class="required-star">*</span>外出时间</div>
         <div class="detail-value" id="detailOutTime"></div>
     </div>
     <div class="detail-item">
-        <div class="detail-label">外出方式（去）</div>
-        <div class="detail-value">步行</div>
+        <div class="detail-label"><span class="required-star">*</span>外出方式（去）</div>
+        <div class="detail-value">网约车</div>
     </div>
     <div class="detail-item">
-        <div class="detail-label">外出方式（回）</div>
-        <div class="detail-value">步行</div>
+        <div class="detail-label"><span class="required-star">*</span>外出方式（回）</div>
+        <div class="detail-value">网约车</div>
     </div>
     <div class="detail-item">
-        <div class="detail-label">是否结伴同行</div>
+        <div class="detail-label"><span class="required-star">*</span>是否结伴同行</div>
         <div class="radio-group">
             <div>○ 是</div>
             <div>◉ 否</div>
         </div>
     </div>
+
+    <div class="section-title">请假材料</div>
+    <div class="detail-item">
+        <div class="detail-label">材料说明</div>
+        <input class="detail-input">
+    </div>
+    <div class="detail-item">
+        <div class="detail-label">上传材料</div>
+        <div class="detail-value"></div>
+    </div>
+
+    <div class="section-title">请假承诺</div>
+    <div class="detail-item" style="min-height: 70px; padding: 12px 16px; align-items: flex-start;">
+        <div class="detail-value" style="color: #666; font-size: 13px; line-height: 1.5;">
+            本人承诺所填信息真实有效，严格遵守学校外出管理规定，外出期间自觉遵守法律法规，注意人身及财产安全，按时返校销假。
+        </div>
+    </div>
+
+    <div class="section-title">销假</div>
+    <div class="detail-item">
+        <div class="detail-label">备注</div>
+        <input class="detail-input">
+    </div>
+    <div class="detail-item">
+        <div class="detail-label">上传图片</div>
+        <div class="upload-img-box">📷</div>
+    </div>
+    <div class="detail-item">
+        <div class="detail-label">状态</div>
+        <div class="detail-value" id="detailStatus">待销假</div>
+    </div>
+
+    <button class="btn-cancel-leave" onclick="submitCancelLeave()">销假</button>
 </div>
 <script>
+let currentDetailId = null;
+
 window.onload = function() {
     document.getElementById('userName').value = localStorage.getItem('savedUserName') || '';
     document.getElementById('userId').value = localStorage.getItem('savedUserId') || '';
@@ -762,7 +821,7 @@ function renderHistory(){
         const statusClass = item.status === '待销假' ? 'tag-pending' : 'tag-finished';
         // 斜角标签两种状态都显示文字
         const statusText = item.status;
-        // 列表内行的销假状态：仅已销假显示文字，待销假空白
+        // 列表内行的销假状态：待销假空白，已销假显示文字
         const rowStatusText = item.status === '已销假' ? item.status : '';
         
         const leaveSlipHtml = index === 0 
@@ -873,16 +932,30 @@ function toggleStatus(id){
     });
     localStorage.setItem('leaveHistory',JSON.stringify(history));
     renderHistory();
+    // 同步更新详情页状态
+    if(currentDetailId === id) {
+        const item = history.find(v=>v.id===id);
+        if(item) {
+            document.getElementById('detailStatus').innerText = item.status;
+        }
+    }
 }
 function openDetail(id){
     const history = JSON.parse(localStorage.getItem('leaveHistory')||'[]');
     const item = history.find(v=>v.id===id);
     if(!item) return;
+    currentDetailId = id;
     document.getElementById('detailTime').innerText = `${item.startTime} 至 ${item.endTime}`;
     document.getElementById('detailDuration').innerText = item.duration;
     document.getElementById('detailReason').innerText = item.reason.replace('校外:','');
     document.getElementById('detailOutTime').innerText = `${item.startTime} 至 ${item.endTime}`;
+    document.getElementById('detailStatus').innerText = item.status;
     showPage('page4');
+}
+// 销假提交
+function submitCancelLeave() {
+    if(!currentDetailId) return;
+    toggleStatus(currentDetailId);
 }
 </script>
 </body>
